@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chieftain</title>
+<link rel="stylesheet" href="style.css">
+<script src="code.js"></script>
+</head>
+<body id="gridContainer" onload="customers()">
+<div id="header"><img src="CHIEFTAIN.svg">
+<span><a href="products.html" class="menu">Products</a></span>
+<span><a href="customers.html" class="menu">Customers</a></span>
+<span><a href="purchases.html" class="menu">Purchases</a></span>
+<span><a href="login.html" class="menu">Log Out</a></span>
+</div>
+
+<div id="contentBox">
+<table id="mainTable"></table>
+</div>
+
+</body>
+<script>
+    let table = document.getElementById("mainTable")
+    let tr = document.createElement("tr")
+    table.appendChild(tr)
+    let tdName = document.createElement("td")
+    tdName.innerText = "Customer Name"
+    tr.appendChild(tdName)
+    let tdProducts = document.createElement("td")
+    tdProducts.innerText = "products"
+    tr.appendChild(tdProducts)
+    let tdDates = document.createElement("td")
+    tdDates.innerText = "purchased dates"
+    tr.appendChild(tdDates)
+
+async function customers() 
+{    
+    // let token = localStorage.getItem("token");
+    let resp = await fetch("http://127.0.0.1:5000/customers");
+    let customersData = await resp.json();
+    console.table(customersData)
+
+    customersData.forEach(customer => {
+
+    let tr = document.createElement("tr")
+    table.appendChild(tr)
+   
+    let tdName = document.createElement("td")
+    tdName.innerText = `${customer.firstname} ${customer.lastname}`
+    tr.appendChild(tdName)
+
+    let productsAndDates 
+    search(`${customer.customerID}`).then((data)=>{
+
+    let tdProducts = document.createElement("td")
+    tdProducts.innerText = `${data}`
+    tr.appendChild(tdProducts)
+
+    let tdDates = document.createElement("td")
+    tdDates.innerText = ""
+    tr.appendChild(tdDates) })
+
+    }) //CUSTOMERS FOREACH
+} //FUNCTION ITSELF
+
+async function search(id) 
+{
+    let obj = {customerID : id}
+    let fetchParams = {  
+    method : "POST",
+    body : JSON.stringify(obj),
+    headers : {"Content-type" : "application/json"}
+                    }
+    let x = await fetch("http://127.0.0.1:5000/search", fetchParams);
+    let Data = await x.json();
+    let z = ""
+    Data.forEach(prod => {
+        z += `${prod.name} `
+        console.log(z)
+    })
+    return z
+    }
+</script>
+</html>

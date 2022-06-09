@@ -1,0 +1,196 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="css.scss" />
+    <meta charset="utf-8" />
+  </head>
+
+  <body id="body">
+    <nav class="navbar">
+      <div class="nav">
+        <img
+          src="2560px-Boris_Johnson's_signature.svg.png"
+          class="brand-logo"
+          alt=""
+        />
+        <div class="nav-items"><</div>
+      </div>
+    </nav>
+    <ul class="links-container">
+      <li class="link-item"><a href="main_menu.html" class="link">Home</a></li>
+      <li class="link-item">
+        <a href="products.html" class="link">Products</a>
+      </li>
+      <li class="link-item">
+        <a href="customers.html" class="link">Customers</a>
+      </li>
+      <li class="link-item">
+        <a href="purchases.html" class="link">Purchases</a>
+      </li>
+    </ul>
+    <h1 class="links-container" id="counter">Total purchases</h1>
+    <h1 style="text-decoration: underline; text-align: center">Customers</h1>
+    <div id="tableDiv" class="table">
+      <table id="table" class="purchases-table" border="1">
+        <tr>
+          <td><b>Name</b></td>
+          <td><b>products</b></td>
+          <td id="date"><b>date</b></td>
+          <td><b>Add</b></td>
+        </tr>
+      </table>
+    </div>
+
+    <script>
+      let bodyEl = document.getElementById("body");
+      let counter_divEl = document.getElementById("counter");
+
+      let tabelEl = document.getElementById("table");
+
+      async function main() {
+        counter_global = await get_counter();
+        products_global = await get_all_products();
+        customers_global = await getDataFromMyServer();
+        pur = await getDataFromMyServer2();
+
+        buildClient();
+      }
+      main();
+      async function createPurchase(obj) {
+        let fetchParams = {
+          method: "POST",
+          body: JSON.stringify(obj),
+          headers: { "Content-type": "application/json" },
+        };
+
+        const resp = await fetch(
+          "http://127.0.0.1:5000/purchases",
+          fetchParams
+        );
+
+        let status = await resp.json();
+        console.log(status);
+      }
+      async function getDataFromMyServer() {
+        let resp = await fetch("http://127.0.0.1:5000/customers");
+        let customers = await resp.json();
+        return customers;
+      }
+      async function getDataFromMyServer2() {
+        let resp = await fetch("http://127.0.0.1:5000/purchases");
+        let purchases = await resp.json();
+        return purchases;
+      }
+      async function get_counter() {
+        let resp = await fetch("http://127.0.0.1:5000/purchases/counter");
+        let purchases_counter = await resp.json();
+        let counter_div = document.getElementById("counter");
+        return purchases_counter;
+      }
+      async function get_all_products() {
+        let resp = await fetch("http://127.0.0.1:5000/products");
+        let all_products = await resp.json();
+        return all_products;
+      }
+      async function deleteUser(e_id) {
+        let fetchParams = {
+          method: "DELETE",
+        };
+
+        //sending request
+        const resp = await fetch(
+          `http://127.0.0.1:5000/customers/${e_id}`,
+          fetchParams
+        );
+
+        let status = await resp.json();
+        console.log(status);
+      }
+
+      async function getByProductId(cid) {
+        const resp = await fetch(`http://127.0.0.1:5000/products/${cid}`);
+        if (resp.ok) {
+          let res = resp.json();
+
+          return res;
+        }
+      }
+
+      function buildClient() {
+        counter_divEl.innerText = `total purchases: ${counter_global}`;
+
+        customers_global.forEach((customer) => {
+          let trEl = document.createElement("tr");
+          tabelEl.appendChild(trEl);
+          let tdEl = document.createElement("td");
+          trEl.appendChild(tdEl);
+          tdEl.innerText = `${customer["First Name"]} ${customer["Last Name"]}`;
+          dateTd = document.createElement("td");
+          prodTd = document.createElement("td");
+
+          sel = document.createElement("select");
+          td = document.createElement("td");
+
+          addBtn = document.createElement("td");
+          addBtnEl = document.createElement("input");
+          addBtnEl.type = "button";
+          addBtnEl.value = "ADD";
+          addBtnEl.onclick = () => {
+            purchaseBtn = document.createElement("input");
+            purchaseBtn.type = "button";
+            purchaseBtn.value = "purchase";
+            purchaseBtn.onclick = () => createPurchase(obj)(location.reload());
+
+            trEl.appendChild(td);
+            td.appendChild(sel);
+            td.appendChild(purchaseBtn);
+            products_global.forEach((product) => {
+              optEl = document.createElement("option");
+              optEl.value = product["_id"];
+
+              sel.appendChild(optEl);
+              sel.onchange = (e) => {
+                obj = {
+                  CustomerID: customer["_id"],
+                  ProductID: sel.value,
+                };
+              };
+
+              optEl.innerText = product["Name"];
+            });
+          };
+
+          pur.forEach((pu) => {
+            if (pu["CustomerID"] == customer["_id"]) {
+              products_global.forEach((product) => {
+                if (product["_id"] == pu["ProductID"]) {
+                  console.log(product["Name"]);
+                  link = document.createElement("A");
+                  link.href = `editproduct.html?pid=${product["_id"]}`;
+                  link.type = "text/html";
+                  link.innerText = product["Name"];
+
+                  console.log(link);
+                  liEL = document.createElement("li");
+
+                  document.createElement("td");
+                  trEl.appendChild(prodTd);
+                  prodTd.appendChild(liEL);
+                  liEL.appendChild(link);
+
+                  dateEl = document.createElement("li");
+                  trEl.appendChild(dateTd);
+                  dateTd.appendChild(dateEl);
+                  console.log(pu);
+                  dateEl.innerText = pu["Date"];
+                }
+              });
+
+              trEl.appendChild(addBtn);
+              addBtn.appendChild(addBtnEl);
+            }
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

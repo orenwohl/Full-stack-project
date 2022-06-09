@@ -1,0 +1,149 @@
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="css.scss">
+    <nav class="navbar">
+        <div class="nav">
+            <img src="2560px-Boris_Johnson's_signature.svg.png" class="brand-logo" alt="">
+            <div class="nav-items">
+               
+            </div>
+        </div>
+    </nav>
+    <ul class="links-container">
+        <li class="link-item"><a href="main_menu.html" class="link">Home</a></li>
+        <li class="link-item"><a href="products.html" class="link">Products</a></li>
+        <li class="link-item"><a href="customers.html" class="link">Customers</a></li>
+        <li class="link-item"><a href="purchases.html" class="link">Purchases</a></li>
+
+    </ul>
+    <header class="hero-section">
+
+<body>
+    <div class="content">
+
+
+        <h1>Edit product</h1>
+        Name: <input type="text" placeholder="product name" id=productname> <br>
+        Price: <input type="text" placeholder="Product price" id="productprice"><br>
+        Quantity: <input type="text" placeholder="Quantity" id="productquantity"><br>
+        <input type="button" value="Update product" class="btn" onclick=update()>
+        <input type="button" value="Delete prodcut " onclick=deleteProdcut()>
+
+        <ul id="ul"></ul>
+    </div>
+    <script>
+        const searchQuery = window.location.search;
+        const searchParams = new URLSearchParams(searchQuery);
+        let productId = searchParams.get('pid')
+        console.log(productId)
+        async function main() {
+
+            products_global = await getProductById()
+            purchases_global = await getPurchaseByProduct()
+            customers_global = await getAllcustomers()
+
+
+
+
+            buildClient()
+
+
+        }
+        main()
+        async function deleteProdcut() {
+
+
+            let fetchParams = {
+                method: "DELETE"
+            }
+
+            //sending request
+            const resp = await fetch(`http://127.0.0.1:5000/products/${productId}`, fetchParams)
+
+            let status = await resp.json();
+            console.log(status);
+        }
+        async function getAllcustomers() {
+            let resp = await fetch("http://127.0.0.1:5000/customers");
+            let customers = await resp.json()
+            return customers
+        }
+        async function getPurchaseByProduct() {
+            let resp = await fetch(`http://127.0.0.1:5000/purchases/search/?pid=${productId}`);
+            let purchasesById = await resp.json()
+
+            return purchasesById
+        }
+        async function update(obj) {
+            obj = {
+                "Name": document.getElementById("productname").value,
+                "Price": parseInt(document.getElementById("productprice").value),
+                "Quantity": parseInt(document.getElementById("productquantity").value)
+            }
+            let fetchParams = {
+                method: "PUT",
+                body: JSON.stringify(obj),
+                headers: { "Content-type": "application/json" }
+            }
+            const resp = await fetch(`http://127.0.0.1:5000/products/${productId}`, fetchParams)
+
+            let status = await resp.json();
+            console.log(status);
+            location.reload()
+
+
+        }
+
+        async function getProductById() {
+            let resp = await fetch(`http://127.0.0.1:5000/products/${productId}`);
+            let product = await resp.json()
+
+            return product
+        }
+        async function buildClient() {
+
+
+            let prodNmae = document.getElementById("productname")
+            prodNmae.value = products_global["Name"]
+
+
+            prodPrice = document.getElementById("productprice")
+            prodPrice.value = products_global["Price"]
+
+            prodQuantity = document.getElementById("productquantity")
+            prodQuantity.value = products_global["Quantity"]
+
+
+            purchases_global.forEach(pur => {
+
+                let filterdCustomer = customers_global.filter(cus => cus["_id"] == pur["CustomerID"])
+                let filt = filterdCustomer.map(customer => customer["First Name"])
+                filt.forEach(name => {
+                    let link = document.createElement("A")
+                    link.href = `editcustomer.html?cid=${pur["CustomerID"]}`
+                    link.type = "text/html"
+                    let liEl = document.createElement("li")
+                    let ulEL = document.getElementById("ul")
+                    ulEL.appendChild(liEl)
+                    link.innerText = name
+                    liEl.appendChild(link)
+                })
+            })
+
+
+
+        }
+
+
+
+
+
+
+    </script>
+
+</body>
+
+
+</html>

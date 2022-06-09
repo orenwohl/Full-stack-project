@@ -1,0 +1,200 @@
+<html>
+  <title>Oren store</title>
+  <div></div>
+  <head>
+    <link rel="stylesheet" href="css.scss" />
+    <nav class="navbar">
+      <div class="nav">
+        <img
+          src="2560px-Boris_Johnson's_signature.svg.png"
+          class="brand-logo"
+          alt=""
+        />
+        <div class="nav-items"></div>
+      </div>
+    </nav>
+    <ul class="links-container">
+      <li class="link-item">
+        <a href="main_menu.html" class="link">Home</a>
+      </li>
+      <li class="link-item">
+        <a href="products.html" class="link">Products</a>
+      </li>
+      <li class="link-item">
+        <a href="customers.html" class="link">Customers</a>
+      </li>
+      <li class="link-item">
+        <a href="purchases.html" class="link">Purchases</a>
+      </li>
+    </ul>
+    <h1 class="links-container" id="counter">Total purchases</h1>
+
+    <div class="product-container" id="products"></div>
+  </head>
+  <body id="body" class="body">
+    <div>
+      <script>
+        let bodyEl = document.getElementById("body");
+        let counter_divEl = document.getElementById("counter");
+
+        async function main() {
+          counter_global = await get_counter();
+          products_global = await get_all_products();
+          console.log(products_global);
+          customers_global = await getDataFromMyServer2();
+
+          purchases_global = await getDataFromMyServer();
+
+          console.log(counter_global);
+          buildClient();
+        }
+        main();
+        async function createPurchase(obj) {
+          let fetchParams = {
+            method: "POST",
+            body: JSON.stringify(obj),
+            headers: { "Content-type": "application/json" },
+          };
+
+          const resp = await fetch(
+            "http://127.0.0.1:5000/purchases",
+            fetchParams
+          );
+
+          let status = await resp.json();
+          console.log(status);
+        }
+
+        async function getDataFromMyServer2() {
+          let resp = await fetch("http://127.0.0.1:5000/customers");
+          let customers = await resp.json();
+          return customers;
+        }
+
+        async function getDataFromMyServer() {
+          let resp = await fetch("http://127.0.0.1:5000/purchases");
+          let purchases = await resp.json();
+          return purchases;
+        }
+        async function get_counter() {
+          let resp = await fetch("http://127.0.0.1:5000/purchases/counter");
+          let purchases_counter = await resp.json();
+          let counter_div = document.getElementById("counter");
+          return purchases_counter;
+        }
+        async function get_all_products() {
+          let resp = await fetch("http://127.0.0.1:5000/products");
+          let all_products = await resp.json();
+          return all_products;
+        }
+
+        async function getByProductId(pid) {
+          const resp = await fetch(
+            `http://127.0.0.1:5000/purchases/search?pid=${pid}`
+          );
+          if (resp.ok) {
+            let res = await resp.json();
+            return res;
+          }
+        }
+
+        function buildClient() {
+          counter_divEl.innerText = `total purchases: ${counter_global}`;
+          productsDivEl = document.getElementById("products");
+
+          products_global.forEach((product) => {
+            console.log(product.Name);
+            let productDivEl2 = document.createElement("div");
+            productDivEl2.className = "product-div";
+
+            productsDivEl.appendChild(productDivEl2);
+            let headerDivEl = document.createElement("div");
+            productDivEl2.appendChild(headerDivEl);
+
+            headerDivEl.className = "product-header";
+            let spanEl = document.createElement("span");
+            spanEl.className = "span";
+            headerDivEl.appendChild(spanEl);
+
+            spanEl.innerText = ` Name: ${product.Name} 
+
+                price: ${product.Price}
+
+                Quantity: ${product.Quantity}
+                
+                
+
+                
+                
+                `;
+            data = getByProductId(product["_id"]);
+            console.log(data[0]);
+
+            purchases_global.forEach((pur) => {
+              if (product["_id"] == pur["ProductID"]) {
+                console.log(pur["CustomerID"]);
+                customers_global.forEach((cus) => {
+                  if (cus["_id"] == pur["CustomerID"]) {
+                    console.log(cus["Name"]);
+                    link = document.createElement("A");
+                    link.href = `editcustomer.html?pid=${cus["_id"]}`;
+                    link.type = "text/html";
+                    link.innerText = cus["Name"];
+                    abc = cus["First Name"];
+                    a = document.createElement("p");
+
+                    a.innerText = `${cus["First Name"]} ${cus["Last Name"]} `;
+                    link = document.createElement("A");
+                    link.href = `editcustomer.html?cid=${cus["_id"]}`;
+                    link.type = "text/html";
+                    link.innerText = `${cus["First Name"]} ${cus["Last Name"]}   ${pur["Date"]} 
+                                `;
+                    let cusIlEl = document.createElement("li");
+                    let customerDivEl = document.createElement("div");
+
+                    productDivEl2.appendChild(customerDivEl);
+                    cusIlEl.appendChild(link);
+                    customerDivEl.appendChild(cusIlEl);
+
+                    let buyBtn = document.createElement("input");
+                    buyBtn.type = "button";
+                    buyBtn.className = "buy-button";
+                    buyBtn.value = "buy";
+                    customerDivEl.appendChild(buyBtn);
+                    let sel = document.createElement("select");
+                    products_global.forEach((product) => {
+                      let optEl = document.createElement("option");
+
+                      optEl.value = product["_id"];
+                      optEl.innerText = product["Name"];
+                      sel.appendChild(optEl);
+                    });
+                    let s = document.createElement("input");
+                    buyBtn.onclick = () => {
+                      s.type = "button";
+                      s.value = "purchase";
+                      s.innerText = "purchase";
+                      d = document.createElement("span");
+                      cusIlEl.appendChild(sel);
+                      cusIlEl.appendChild(d);
+                      d.appendChild(s);
+                      sel.onchange = (e) => {
+                        obj = {
+                          CustomerID: cus["_id"],
+                          ProductID: sel.value,
+                        };
+
+                        s.onclick = () =>
+                          createPurchase(obj)(location.reload());
+                      };
+                    };
+                  }
+                });
+              }
+            });
+          });
+        }
+      </script>
+    </div>
+  </body>
+</html>

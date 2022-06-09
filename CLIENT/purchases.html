@@ -1,0 +1,170 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="css.scss" />
+    <nav class="navbar">
+      <div class="nav">
+        <img
+          src="2560px-Boris_Johnson's_signature.svg.png"
+          class="brand-logo"
+          alt=""
+        />
+        <div class="nav-items"></div>
+      </div>
+    </nav>
+    <ul class="links-container">
+      <li class="link-item"><a href="main_menu.html" class="link">Home</a></li>
+      <li class="link-item">
+        <a href="products.html" class="link">Products</a>
+      </li>
+      <li class="link-item">
+        <a href="customers.html" class="link">Customers</a>
+      </li>
+      <li class="link-item">
+        <a href="purchases.html" class="link">Purchases</a>
+      </li>
+    </ul>
+  </head>
+
+  <body id="body">
+    <h1 style="text-decoration: underline; text-align: center">Purchases</h1>
+    <div class="search-container">
+      <select name="" id="cusSelcetEl">
+        <option value="">All customers</option>
+      </select>
+
+      <select name="" id="prodSelectEl">
+        <option value="">All products</option>
+      </select>
+
+      <input type="date" name="" id="date" pattern="d{4}-\d{2}-\d{2}" />
+      <input
+        type="button"
+        value="Search"
+        style="color: red"
+        onclick="getPurchaseSearch()"
+      />
+      <div>
+        <table id="table" class="purchase-table" border="1">
+          <tr>
+            <td>Customer</td>
+            <td>Product</td>
+            <td>Date</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      let customerId = document.getElementById("cusSelcetEl").value;
+      let productId = document.getElementById("prodSelectEl").value;
+      let bodyEl = document.getElementById("body");
+      let counter_divEl = document.getElementById("counter");
+      let ulEl = document.getElementById("ulEl");
+      let cusSelcetEl = document.getElementById("cusSelcetEl");
+      let prodSelcetEl = document.getElementById("prodSelectEl");
+      let tablEl = document.getElementById("table");
+
+      async function main() {
+        counter_global = await get_counter();
+        products_global = await get_all_products();
+        customers_global = await getDataFromMyServer();
+        purchases_global = await getAllPurchases();
+        purchasesById_global = await getPurchaseSearch();
+        buildClient();
+      }
+      main();
+
+      async function getPurchaseSearch() {
+        let customerId = document.getElementById("cusSelcetEl").value;
+        let productId = document.getElementById("prodSelectEl").value;
+        let datEl = document.getElementById("date").value;
+
+        console.log(datEl.value);
+        let resp = await fetch(
+          `http://127.0.0.1:5000/purchases/sea/?cid=${customerId}&pid=${productId}&date=${datEl}`
+        );
+        tablEl.innerHTML = "";
+
+        let purchasesById = await resp.json();
+        console.log(purchasesById);
+        purchasesById.forEach((td) => {
+          let trEl = document.createElement("tr");
+          let tdEl = document.createElement("td");
+
+          let tdEl2 = document.createElement("td");
+
+          let tdEl3 = document.createElement("td");
+
+          builidTable(
+            td["CustomerID"],
+            td["ProductID"],
+            td["Date"],
+            trEl,
+            tdEl,
+            tdEl2,
+            tdEl3
+          );
+        });
+
+        return purchasesById;
+      }
+      function getNameByIdFromArray(id, arr) {
+        let selectedItem = arr.forEach((item) => item.id === id);
+
+        return selectedItem.name;
+      }
+
+      function builidTable(name, prod, date, trEl, td1, td2, td3) {
+        tablEl.appendChild(trEl);
+        trEl.appendChild(td1);
+        trEl.appendChild(td2);
+        trEl.appendChild(td3);
+
+        let firstName = customers_global.filter((item) => item["_id"] == name);
+        let product = products_global.filter((item) => item["_id"] == prod);
+        td1.innerText = `${firstName[0]["First Name"]} ${firstName[0]["Last Name"]}`;
+        td2.innerText = product[0]["Name"];
+        td3.innerText = date;
+      }
+
+      async function getAllPurchases() {
+        let resp = await fetch("http://127.0.0.1:5000/purchases");
+        let purchases = await resp.json();
+        return purchases;
+      }
+
+      async function getDataFromMyServer() {
+        let resp = await fetch("http://127.0.0.1:5000/customers");
+        let customers = await resp.json();
+        return customers;
+      }
+      async function get_counter() {
+        let resp = await fetch("http://127.0.0.1:5000/purchases/counter");
+        let purchases_counter = await resp.json();
+        let counter_div = document.getElementById("counter");
+        return purchases_counter;
+      }
+      async function get_all_products() {
+        let resp = await fetch("http://127.0.0.1:5000/products");
+        let all_products = await resp.json();
+        return all_products;
+      }
+
+      function buildClient() {
+        customers_global.forEach((customer) => {
+          let optEl = document.createElement("option");
+          cusSelcetEl.appendChild(optEl);
+          optEl.value = customer["_id"];
+          optEl.innerText = `${customer["First Name"]} ${customer["Last Name"]}`;
+        });
+        console.log(purchasesById_global);
+        products_global.forEach((product) => {
+          let optEl = document.createElement("option");
+          prodSelcetEl.appendChild(optEl);
+          optEl.value = product["_id"];
+          optEl.innerText = product["Name"];
+        });
+      }
+    </script>
+  </body>
+</html>
